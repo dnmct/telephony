@@ -71,4 +71,58 @@ defmodule Telephony.Core.PrepaidTest do
 
     assert expect == result
   end
+
+  test "print invoice" do
+    date = ~D[2024-04-05]
+    last_month = ~D[2024-03-15]
+
+    subscriber = %Subscriber{
+      full_name: "Dan",
+      phone_number: "1234567890",
+      subscriber_type: %Prepaid{
+        credits: 253.6,
+        recharges: [
+          %Recharge{value: 100, date: date},
+          %Recharge{value: 100, date: last_month},
+          %Recharge{value: 100, date: last_month}
+        ]
+      },
+      calls: [
+        %Call{
+          time_spent: 2,
+          date: date
+        },
+        %Call{
+          time_spent: 10,
+          date: last_month
+        },
+        %Call{
+          time_spent: 20,
+          date: last_month
+        }
+      ]
+    }
+
+    subscriber_type = subscriber.subscriber_type
+    calls = subscriber.calls
+
+    assert Invoice.print(subscriber_type, calls, 2024, 3) == %{
+             calls: [
+               %{
+                 time_spent: 10,
+                 value_spent: 14.5,
+                 date: last_month
+               },
+               %{
+                 time_spent: 20,
+                 value_spent: 29.0,
+                 date: last_month
+               }
+             ],
+             recharges: [
+               %Recharge{value: 100, date: last_month},
+               %Recharge{value: 100, date: last_month}
+             ]
+           }
+  end
 end
