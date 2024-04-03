@@ -5,7 +5,7 @@ defmodule Telephony.Core.Postpaid do
 
   defimpl Subscriber, for: Telephony.Core.Postpaid do
     @price_per_minute 1.04
-    def print_invoice(_subscriber_type, calls, year, month) do
+    def print_invoice(_type, calls, year, month) do
       calls = Enum.reduce(calls, [], &filter_calls(&1, &2, year, month))
 
       value_spent = Enum.reduce(calls, 0, &(&1.value_spent + &2))
@@ -26,21 +26,21 @@ defmodule Telephony.Core.Postpaid do
       end
     end
 
-    def make_call(subscriber_type, time_spent, date) do
-      subscriber_type |> update_spent(time_spent) |> add_call(time_spent, date)
+    def make_call(type, time_spent, date) do
+      type |> update_spent(time_spent) |> add_call(time_spent, date)
     end
 
-    defp update_spent(subscriber_type, time_spent) do
+    defp update_spent(type, time_spent) do
       spent = @price_per_minute * time_spent
-      %{subscriber_type | spent: subscriber_type.spent + spent}
+      %{type | spent: type.spent + spent}
     end
 
-    defp add_call(subscriber_type, time_spent, date) do
+    defp add_call(type, time_spent, date) do
       call = Call.new(time_spent, date)
-      {subscriber_type, call}
+      {type, call}
     end
 
-    def make_recharge(_subscriber_type, _value, _date) do
+    def make_recharge(_type, _value, _date) do
       {:error, "Only prepaid subscribers can make recharges"}
     end
   end
